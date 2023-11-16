@@ -12,7 +12,8 @@
     flake-parts.lib.mkFlake { inherit inputs; } ({ withSystem, moduleWithSystem, flake-parts-lib, ... }:
       let
         inherit (flake-parts-lib) importApply;
-        # Goatcounter (privacy-focused, self-hosted web analytics)
+
+        flakeModules.default = flakeModules.goatcounter;
         flakeModules.goatcounter = importApply ./flake-modules/goatcounter { inherit withSystem; };
       in
       {
@@ -22,6 +23,7 @@
           inputs.treefmt-nix.flakeModule
           inputs.flake-root.flakeModule
 
+          # This flake's module.
           flakeModules.goatcounter
         ];
 
