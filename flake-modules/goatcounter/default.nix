@@ -68,6 +68,6 @@ in
   };
 
   perSystem = { self', inputs', config, pkgs, ... }: {
-    packages = { goatcounter = pkgs.callPackage ./goatcounter.nix { }; };
+    packages = rec { goatcounter = pkgs.callPackage ./goatcounter.nix { }; default = goatcounter; };
   };
 }
