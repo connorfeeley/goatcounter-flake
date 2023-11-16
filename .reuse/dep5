@@ -1,0 +1,12 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: goatcounter-flake
+Upstream-Contact: Connor Feeley <git@cfeeley.org>
+Source: https://github.com/connorfeeley/goatcounter-flake
+
+Files: flake.nix flake.lock flake-modules/goatcounter/* .gitignore
+Copyright: 2023 Connor Feeley <git@cfeeley.org>
+License: BSD-3-Clause
+
+Files: default.nix shell.nix
+Copyright: 2020-2021 Eelco Dolstra and the flake-compat contributors
+License: MIT
