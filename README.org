@@ -1,0 +1,36 @@
+#+author: Connor Feeley
+#+date: 2023-11-16
+
+* GoatCounter ~flake-parts~ modules
+This Nix flake provides a Nix package for the privacy-focused [[https://www.goatcounter.com/][GoatCounter]] analytics platform, a NixOS module to enable it as a service, and a [[https://github.com/hercules-ci/flake-parts][flake-parts]] flake module.
+
+** Contents
+*** Package
+#+begin_example
+packages.${system}.goatcounter
+#+end_example
+
+The ~default~ package output is simple an alias to ~goatcounter~.
+#+begin_example
+packages.${system}.default
+#+end_example
+
+*** NixOS Module
+#+begin_example
+nixosModules.${system}.goatcounter
+#+end_example
+A Nix module that configuress the GoatCounter service.
+
+*** Flake Module
+No options exposed.
+
+** Platform Support
+The ~goatcounter~ package has been tested on both =x86_64-linux= and =aarch64-darwin=.
+
+The ~goatcounter~ NixOS module has only been tested on =x86_64-linux=.
+
+** Contributions
+Contributions and forks are welcome.
+
+** License
+Primarily [[file:LICENSES/BSD-3-Clause.txt][BSD-3-Clause]], except for the MIT-licensed [[https://github.com/edolstra/flake-compat][flake-compat]] shims.
