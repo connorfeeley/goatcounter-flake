@@ -44,7 +44,7 @@
 
           # Shell with treefmt.
           devShells.default = pkgs.mkShell {
-            nativeBuildInputs = [ config.treefmt.build.wrapper ];
+            nativeBuildInputs = [ config.treefmt.build.wrapper pkgs.reuse ];
           };
 
           # Treefmt configuration.
