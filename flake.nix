@@ -35,6 +35,16 @@
         flake = { inherit flakeModules; };
 
         perSystem = { self', config, pkgs, ... }: {
+          packages = rec {
+            goatcounter = pkgs.callPackage ./pkgs/servers/web-apps/goatcounter { };
+            default = goatcounter;
+          };
+
+          # Shell with treefmt.
+          devShells.default = pkgs.mkShell {
+            nativeBuildInputs = [ config.treefmt.build.wrapper ];
+          };
+
           # Treefmt configuration.
           treefmt.config = {
             inherit (config.flake-root) projectRootFile;
