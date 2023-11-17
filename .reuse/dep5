@@ -3,7 +3,7 @@ Upstream-Name: goatcounter-flake
 Upstream-Contact: Connor Feeley <git@cfeeley.org>
 Source: https://github.com/connorfeeley/goatcounter-flake
 
-Files: flake.nix flake.lock flake-modules/goatcounter/* .gitignore
+Files: README.org flake.nix flake.lock flake-modules/goatcounter/* .gitignore
 Copyright: 2023 Connor Feeley <git@cfeeley.org>
 License: BSD-3-Clause
 
