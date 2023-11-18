@@ -34,14 +34,26 @@
           flakeModules.options-doc
         ];
 
-        # Export flakeModules.
-        flake = { inherit flakeModules; };
+        flake = {
+          # Export flakeModules.
+          inherit flakeModules;
 
-        flake.nixosModules.goatcounter = { pkgs, ... }: {
-          imports = [ ./nixos/modules/services/web-apps/goatcounter ];
-          services.goatcounter.package = withSystem pkgs.stdenv.hostPlatform.system ({ config, ... }:
-            config.packages.default
-          );
+          # Export goatcounter module.
+          nixosModules.goatcounter = { pkgs, ... }: {
+            imports = [ ./nixos/modules/services/web-apps/goatcounter ];
+            services.goatcounter.package = withSystem pkgs.stdenv.hostPlatform.system ({ config, ... }:
+              config.packages.default
+            );
+          };
+
+          # Export goatcounter module.
+          templates = rec {
+            default = container;
+            container = {
+              path = ./examples/container;
+              description = "A very basic flake";
+            };
+          };
         };
 
         perSystem = { self', config, pkgs, ... }: {
