@@ -9,6 +9,20 @@
   <xsl:template match="/">
     <xsl:apply-templates/>
   </xsl:template>
+  <xsl:template match="db:variablelist">
+    <chapter>
+      <title>
+        <xsl:value-of select="$title"/>
+      </title>
+      <para>@intro@</para>
+      <section><title>Options</title>
+        <xsl:for-each select="db:varlistentry">
+          <para><link xlink:href="#{db:term/@xml:id}"><xsl:copy-of select="db:term/db:option"/></link></para>
+        </xsl:for-each>
+      </section>
+      <xsl:apply-templates />
+    </chapter>
+  </xsl:template>
   <xsl:template match="db:varlistentry">
     <section>
       <title>

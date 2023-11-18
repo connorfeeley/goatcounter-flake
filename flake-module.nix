@@ -23,9 +23,12 @@
       optionsDoc = pkgs.nixosOptionsDoc {
         inherit (eval) options;
         markdownByDefault = true;
+        warningsAreErrors = true;
         documentType = "none";
       };
 
+      title = "Foo";
+      preface = "Bar";
       rendered = pkgs.runCommand "option-doc"
         {
           nativeBuildInputs = [ pkgs.libxslt.bin pkgs.pandoc ];
@@ -35,11 +38,16 @@
           -o options.db.xml ${./options.xsl} \
           "$inputDoc"
         mkdir $out
-        pandoc --verbose --from docbook --to html options.db.xml >options.html
+        pandoc --verbose --from docbook --to html options.db.xml > options.html
+        substitute options.html $out/options.html --replace '<p>@intro@</p>' "$preface"
+        grep -v '@intro@' <$out/options.html >/dev/null || {
+          grep '@intro@' <$out/options.html
+          echo intro replacement failed; exit 1;
+        }
       '';
     in
     {
       # create a derivation for capturing the markdown output
-      packages.options-doc = optionsDoc.optionsDocBook;
+      packages.options-doc = rendered;
     };
 }

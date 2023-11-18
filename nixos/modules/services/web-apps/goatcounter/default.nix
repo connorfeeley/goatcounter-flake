@@ -63,7 +63,7 @@ in
       description = lib.mdDoc ''
         Additional environment file as defined in {manpage}`systemd.exec(5)`.
 
-        Secrets like `PGDATABASE` and `DBHOST`
+        Secrets like {env}`PGDATABASE` and {env}`DBHOST`
         may be passed to the service without adding them to the world-readable Nix store.
 
         Note that this file needs to be available on the host on which
