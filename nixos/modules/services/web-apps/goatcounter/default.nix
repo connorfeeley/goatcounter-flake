@@ -20,15 +20,21 @@ let
 in
 {
   options.services.goatcounter = {
-    enable = mkEnableOption "Enable the goatcounter service.";
-    package = mkOption { defaultText = lib.literalMD "`packages.default` from the foo flake"; };
+    enable = mkEnableOption (lib.mdDoc "Enable the goatcounter service.");
+    package = mkOption {
+      defaultText = lib.literalMD "`packages.default` from the foo flake";
+      description = lib.mdDoc ''
+        Extra arguments to be passed to `goatcounter serve`.
+      '';
+    };
+
 
     # TODO: seperate sqlite and postgres options.
     database = {
       backend = mkOption {
         type = types.enum [ "postgresql" "sqlite" ];
-        default = "postgresql";
-        description = "Databse backend.";
+        default = lib.literalMD "postgresql";
+        description = lib.mdDoc "Databse backend.";
       };
 
       # host = mkOption { type = types.str; description = "Database host."; };
@@ -37,7 +43,7 @@ in
       passwordFile = mkOption {
         type = with types; nullOr path;
         default = null;
-        example = "/var/lib/goatcounter.passwd";
+        example = lib.literalMD "/var/lib/goatcounter.passwd";
         description = lib.mdDoc ''
           Path to a file containing the password for the database user.
 
@@ -53,11 +59,11 @@ in
     environmentFile = mkOption {
       type = with types; nullOr path;
       default = null;
-      example = "/var/lib/goatcounter.env";
+      example = lib.literalMD "/var/lib/goatcounter.env";
       description = lib.mdDoc ''
         Additional environment file as defined in {manpage}`systemd.exec(5)`.
 
-        Secrets like {env}`PGDATABASE` and {env}`DBHOST`
+        Secrets like `PGDATABASE` and `DBHOST`
         may be passed to the service without adding them to the world-readable Nix store.
 
         Note that this file needs to be available on the host on which
@@ -68,6 +74,9 @@ in
       type = types.listOf types.str;
       default = [ ];
       example = [ "-listen='*:8002'" "-tls=none" "-debug=all" ];
+      description = lib.mdDoc ''
+        Extra arguments to be passed to `goatcounter serve`.
+      '';
     };
   };
 
@@ -77,7 +86,11 @@ in
       wantedBy = [ "multi-user.target" ];
       serviceConfig = {
         DynamicUser = "yes";
-        Environment = goatcounterEnv;
+        Environment = [
+          "PGDATABASE=${cfg.database.name}"
+          (lib.optionalString (cfg.database.user != null) "PGUSER=${cfg.database.user}")
+          (lib.optionalString (cfg.database.passwordFile != null) "PGPASSFILE=%d/passwordFile")
+        ];
         EnvironmentFile = [ ] ++ lib.optional (cfg.environmentFile != null) cfg.environmentFile;
         LoadCredential = lib.mkIf (cfg.database.passwordFile != null) "passwordFile:${cfg.database.passwordFile}";
         ExecStart = "${cfg.package}/bin/goatcounter serve -db '${cfg.database.backend}' ${lib.concatStringsSep " " cfg.extraArgs}";
