@@ -21,7 +21,8 @@
       };
 
       # Helper function to transform module options by replacing Nix store paths
-      # with relative URLs.
+      # with relative URLs. It ensures that if the sourcePath is a directory, links
+      # point to `DIRECTORY/default.nix`.
       transformModuleOptions = { sourceName, sourcePath, baseUrl }:
         let
           # Convert the sourcePath to a string for comparison operations.
@@ -30,23 +31,27 @@
         # Function that accepts module option set and returns modified option set.
         opt:
         let
-          # Map function to process each `declaration` in the module options.
+          # Process each `declaration` in the module options, appending `default.nix`
+          # if the declaration is determined to be a directory.
           declarations = lib.concatMap
             (decl:
               if lib.hasPrefix sourcePathStr (toString decl)
               then
-              # When declaration starts with the source path, create a relative URL
-                let subpath = lib.removePrefix sourcePathStr (toString decl);
-                in [{ url = baseUrl + subpath; name = sourceName + subpath; }]
-              else
-              # If the declaration does not start with the source path, return empty
-                [ ]
+                let
+                  # Remove the Nix store path prefix to get the relative path.
+                  subpath = lib.removePrefix sourcePathStr (toString decl);
+                  # Append `default.nix` if subpath ends with a slash (indicating dir).
+                  fullPath = if lib.pathIsDirectory decl then subpath + "/default.nix" else subpath;
+                in
+                [{ url = baseUrl + fullPath; name = sourceName + fullPath; }]
+              # If the declaration does not start with source path, return empty.
+              else [ ]
             )
             # List of declarations to process, obtained from the `opt` input argument.
             opt.declarations;
         in
         # Return the original module option set merged with the new declarations that
-          # contain the relative URLs.
+          # contain the relative URLs or `default.nix` for directories.
         opt // { inherit declarations; };
 
       # Generate our docs
