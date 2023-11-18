@@ -2,6 +2,10 @@
 #
 # SPDX-License-Identifier: MIT
 
+permissions:
+  contents: write # to push the branch for the PR
+  pull-requests: write # to open the PR
+
 name: update-flake-lock
 on:
   workflow_dispatch: # allows manual triggering
