@@ -12,7 +12,6 @@
 
     # flake-parts and friends.
     flake-parts.url = "github:hercules-ci/flake-parts";
-    haskell-flake.url = "github:srid/haskell-flake";
     flake-root.url = "github:srid/flake-root";
     treefmt-nix = { url = "github:numtide/treefmt-nix"; inputs.nixpkgs.follows = "nixpkgs"; };
   };

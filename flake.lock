@@ -49,21 +49,6 @@
         "type": "github"
       }
     },
-    "haskell-flake": {
-      "locked": {
-        "lastModified": 1700089378,
-        "narHash": "sha256-zckZj26XDiizXN4VSMzYa/uEGRg6FsRIUdHDy0OtogU=",
-        "owner": "srid",
-        "repo": "haskell-flake",
-        "rev": "3694fec07c99d3598fced7dfbaebe6a7fb10e4b7",
-        "type": "github"
-      },
-      "original": {
-        "owner": "srid",
-        "repo": "haskell-flake",
-        "type": "github"
-      }
-    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1695272228,
@@ -103,7 +88,6 @@
         "flake-compat": "flake-compat",
         "flake-parts": "flake-parts",
         "flake-root": "flake-root",
-        "haskell-flake": "haskell-flake",
         "nixpkgs": "nixpkgs",
         "treefmt-nix": "treefmt-nix"
       }
