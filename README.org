@@ -21,6 +21,8 @@ nixosModules.${system}.goatcounter
 #+end_example
 A Nix module that configures the GoatCounter service.
 
+See options documentation generated from this repository: [[https://connorfeeley.github.io/goatcounter-flake/options.html][GoatCounter NixOS Module Options]].
+
 *** Flake Module
 No options exposed.
 
