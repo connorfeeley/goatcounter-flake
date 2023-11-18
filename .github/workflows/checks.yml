@@ -1,6 +1,7 @@
 name: Check outputs
 
 on:
+  pull_request: {} # run on pull requests
   # Runs on pushes targeting the default branch
   push:
     branches: ["master"]
