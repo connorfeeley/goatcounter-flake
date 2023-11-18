@@ -2,7 +2,7 @@
 #+date: 2023-11-16
 
 * GoatCounter ~flake-parts~ modules
-This Nix flake provides a Nix package for the privacy-focused [[https://www.goatcounter.com/][GoatCounter]] analytics platform, a NixOS module to enable it as a service, and a [[https://github.com/hercules-ci/flake-parts][flake-parts]] flake module.
+This Nix flake provides a Nix package for the privacy-focused [[https://www.goatcounter.com/][GoatCounter]] analytics platform, as well as a NixOS module to run it as a service.
 
 ** Contents
 *** Package
@@ -23,8 +23,87 @@ A Nix module that configures the GoatCounter service.
 
 See options documentation generated from this repository: [[https://connorfeeley.github.io/goatcounter-flake/options.html][GoatCounter NixOS Module Options]].
 
-*** Flake Module
-No options exposed.
+** Example Module Usage
+A full flake example is available in the [[file:examples/container][examples]] subdirectory.
+
+GoatCounter will create the database automatically if possible. If you want to create it manually, follow the instructions in the [[https://github.com/arp242/goatcounter/tree/v2.4.1#postgresql][GoatCounter]] repository before deploying your configuration.
+
+*** Concrete Example
+I use this flake to host the analytics for a small webservice I run to monitor the status and usage of my city's bike share system: [[https://bikes.cfeeley.org][bikes.cfeeley.org]].
+
+I'm only interested in some fairly simple analytics like specific page views and client resolutions. I don't feel right opting my users into the advertising surviellance ecosystem by using the dominant analytics platforms. While GoatCounter is available as a hosted service, I'd still rather keep custody of that data - therefore I self-host it.
+
+The main website and GoatCounter each run on the same ARM EC2 instance which in turn talks to a RDS PostgreSQL instance.
+Both the main website and the analytics instance are reverse proxied behind NGINX and the service is configured to automatically generate Let's Encrypt SSL certificates.
+
+To simplify the deployment, GoatCounter runs on the [[https://stats.bikes.cfeeley.org][stats.bikes.cfeeley.org]] subdomain.
+
+I use this NixOS module in my deployment:
+#+begin_src nix
+{ inputs, ... }: {
+  imports = [ inputs.goatcounter.nixosModules.goatcounter ];
+
+  services.goatcounter = {
+    enable = true;
+    environmentFile = "/var/lib/goatcounter.env";
+    extraArgs = [ "-listen='*:8002'" "-tls=http" "-debug=all" ];
+    database = {
+      automigrate = true;
+      backend = "postgresql";
+      name = "goatcounter";
+      user = "goatcounter";
+      passwordFile = "/var/lib/goatcounter.passwd";
+    };
+  };
+
+  # Accept Let's Encrypt's ToS
+  security.acme = {
+    acceptTerms = true;
+    defaults.email = "bikes@cfeeley.org";
+  };
+
+  services.nginx = {
+    enable = true;
+
+    virtualHosts."bikes.cfeeley.org" = {
+      # Main site configuration; happens to be identical to
+      # stats.bikes.cfeeley.org except reverse proxied to a different port.
+    };
+    virtualHosts."stats.bikes.cfeeley.org" = {
+      forceSSL = true;
+      enableACME = true;
+
+      locations."/" = {
+        proxyPass = "http://127.0.0.1:8002/";
+        proxyWebsockets = true; # needed if you need to use WebSocket
+        extraConfig =
+          # required when the target is also TLS server with multiple hosts
+          "proxy_ssl_server_name on;" +
+          # required when the server wants to use HTTP Authentication
+          "proxy_pass_header Authorization;"
+        ;
+      };
+    };
+  };
+}
+#+end_src
+
+Even though the RDS is on a private subnet, I still prefer to keep some of the instance details (hostname, password - obviously) secret.
+This information is set in the referenced =environmentFile= on the EC2 instance:
+#+name: /var/lib/goatcounter.env
+#+begin_src shell
+PGHOST=MY_RDS_INSTANCE.rds.amazonaws.com
+PGPORT=5432
+PGUSER=goatcounter
+#+end_src
+
+And the =passwordFile= includes the actual secret (password) used to access the PostgreSQL RDS instance:
+#+name: /var/lib/goatcounter.passwd
+#+begin_src shell
+# hostname:port:database:username:password
+MY_RDS_INSTANCE.rds.amazonaws.com:5432:goatcounter:MY_POSTGRES_USER:MY_POSTGRES_PASSWORD
+#+end_src
+
 
 ** Platform Support
 The ~goatcounter~ package has been tested on both =x86_64-linux=, =aarch64-linux=, and =aarch64-darwin=.
@@ -35,4 +114,4 @@ The ~goatcounter~ NixOS module has been tested on =x86_64-linux= and =aarch64-li
 Contributions and forks are welcome.
 
 ** License
-Primarily [[file:LICENSES/BSD-3-Clause.txt][BSD-3-Clause]], except for the MIT-licensed [[https://github.com/edolstra/flake-compat][flake-compat]] shims.
+Primarily [[file:LICENSES/BSD-3-Clause.txt][BSD-3-Clause]], except for various MIT-licensed bits borrowed from elsewhere. See the [[file:.reuse/dep5][dep5]] file for more information.
