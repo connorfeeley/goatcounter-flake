@@ -39,6 +39,8 @@
           "$inputDoc"
         mkdir $out
         pandoc --verbose --from docbook --to html options.db.xml > options.html
+        pandoc --verbose --from docbook --to org options.db.xml > $out/options.org
+        cp -r options.db.xml $out/
         substitute options.html $out/options.html --replace '<p>@intro@</p>' "$preface"
         grep -v '@intro@' <$out/options.html >/dev/null || {
           grep '@intro@' <$out/options.html

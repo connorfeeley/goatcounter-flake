@@ -22,7 +22,7 @@
         inherit (flake-parts-lib) importApply;
 
         # Goatcounter (privacy-focused, self-hosted web analytics)
-        flakeModules.options-doc = importApply ./flake-module.nix { localFlake = self; inherit withSystem; };
+        flakeModules.options-doc = importApply ./render { localFlake = self; inherit withSystem; };
       in
       {
         debug = true;
