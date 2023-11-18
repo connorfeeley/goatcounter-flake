@@ -20,12 +20,36 @@
         ];
       };
 
+      # Helper function to replace Nix store paths with relative URLs
+      transformModuleOptions = { sourceName, sourcePath, baseUrl }:
+        let sourcePathStr = toString sourcePath;
+        in
+        opt:
+        let
+          # Replace the Nix store path with a relative URL pointing to the repository files
+          declarations = lib.concatMap
+            (decl:
+              if lib.hasPrefix sourcePathStr (toString decl)
+              then
+                let subpath = lib.removePrefix sourcePathStr (toString decl);
+                in [{ url = baseUrl + subpath; name = sourceName + subpath; }]
+              else [ ]
+            )
+            opt.declarations;
+        in
+        opt // { inherit declarations; };
+
       # Generate our docs
       optionsDoc = pkgs.nixosOptionsDoc {
         inherit (eval) options;
         markdownByDefault = true;
         warningsAreErrors = true;
         documentType = "none";
+        transformOptions = transformModuleOptions {
+          baseUrl = "https://github.com/connorfeeley/goatcounter-flake/blob/master"; # Replace with your actual repository URL
+          sourcePath = localFlake.outPath;
+          sourceName = "goatcounter-flake";
+        };
       };
 
       rendered = pkgs.runCommand "option-doc"
