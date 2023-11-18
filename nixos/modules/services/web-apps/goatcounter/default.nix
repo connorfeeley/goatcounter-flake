@@ -50,7 +50,7 @@ in
         By default, GoatCounter listens on port 80 and 443 and tries to generate
         an ACME/Let's Encrypt certificate.
 
-        To run GoatCounter behind a proxy like Nginx, you can change the port
+        To run GoatCounter behind a proxy like NGINX, you can change the listening port
         with `-listen='*:8002'` and set -tls=http to disable certificate generation.
       '';
     };
@@ -64,8 +64,12 @@ in
       };
 
       name = mkOption { type = types.str; description = "Database name to connect to."; };
-      user = mkOption { type = types.str; description = "PostgreSQL user."; };
-      automigrate = mkEnableOption (lib.mdDoc "automatically migrate the database schema");
+      user = mkOption { type = types.str; description = "PostgreSQL user to use for database connection."; };
+      automigrate = mkOption {
+        type = types.bool;
+        default = false;
+        description = lib.mdDoc "Whether to automatically migrate the database schema.";
+      };
       passwordFile = mkOption {
         type = with types; nullOr path;
         default = null;
