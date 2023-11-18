@@ -20,6 +20,9 @@
     flake-parts.lib.mkFlake { inherit inputs; } ({ withSystem, moduleWithSystem, flake-parts-lib, ... }:
       let
         inherit (flake-parts-lib) importApply;
+
+        # Goatcounter (privacy-focused, self-hosted web analytics)
+        flakeModules.options-doc = importApply ./render { localFlake = self; inherit withSystem; };
       in
       {
         debug = true;
@@ -27,7 +30,12 @@
         imports = [
           inputs.treefmt-nix.flakeModule
           inputs.flake-root.flakeModule
+
+          flakeModules.options-doc
         ];
+
+        # Export flakeModules.
+        flake = { inherit flakeModules; };
 
         flake.nixosModules.goatcounter = { pkgs, ... }: {
           imports = [ ./nixos/modules/services/web-apps/goatcounter ];

@@ -19,15 +19,15 @@ packages.${system}.default
 #+begin_example
 nixosModules.${system}.goatcounter
 #+end_example
-A Nix module that configuress the GoatCounter service.
+A Nix module that configures the GoatCounter service.
 
 *** Flake Module
 No options exposed.
 
 ** Platform Support
-The ~goatcounter~ package has been tested on both =x86_64-linux= and =aarch64-darwin=.
+The ~goatcounter~ package has been tested on both =x86_64-linux=, =aarch64-linux=, and =aarch64-darwin=.
 
-The ~goatcounter~ NixOS module has only been tested on =x86_64-linux=.
+The ~goatcounter~ NixOS module has been tested on =x86_64-linux= and =aarch64-linux=.
 
 ** Contributions
 Contributions and forks are welcome.
