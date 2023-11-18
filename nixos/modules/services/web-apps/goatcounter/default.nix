@@ -51,7 +51,15 @@ in
         an ACME/Let's Encrypt certificate.
 
         To run GoatCounter behind a proxy like NGINX, you can change the listening port
-        with `-listen='*:8002'` and set -tls=http to disable certificate generation.
+        with
+        ``` shellSession
+        -listen='*:8002'
+        ```
+        and set
+        ``` shellSession
+        -tls=http
+        ```
+        to disable certificate generation.
       '';
     };
 
