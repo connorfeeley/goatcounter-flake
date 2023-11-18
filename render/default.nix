@@ -20,23 +20,33 @@
         ];
       };
 
-      # Helper function to replace Nix store paths with relative URLs
+      # Helper function to transform module options by replacing Nix store paths
+      # with relative URLs.
       transformModuleOptions = { sourceName, sourcePath, baseUrl }:
-        let sourcePathStr = toString sourcePath;
+        let
+          # Convert the sourcePath to a string for comparison operations.
+          sourcePathStr = toString sourcePath;
         in
+        # Function that accepts module option set and returns modified option set.
         opt:
         let
-          # Replace the Nix store path with a relative URL pointing to the repository files
+          # Map function to process each `declaration` in the module options.
           declarations = lib.concatMap
             (decl:
               if lib.hasPrefix sourcePathStr (toString decl)
               then
+              # When declaration starts with the source path, create a relative URL
                 let subpath = lib.removePrefix sourcePathStr (toString decl);
                 in [{ url = baseUrl + subpath; name = sourceName + subpath; }]
-              else [ ]
+              else
+              # If the declaration does not start with the source path, return empty
+                [ ]
             )
+            # List of declarations to process, obtained from the `opt` input argument.
             opt.declarations;
         in
+        # Return the original module option set merged with the new declarations that
+          # contain the relative URLs.
         opt // { inherit declarations; };
 
       # Generate our docs
