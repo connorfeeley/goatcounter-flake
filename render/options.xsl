@@ -14,7 +14,6 @@
       <title>
         <xsl:value-of select="$title"/>
       </title>
-      <para>@intro@</para>
       <section><title>Options</title>
         <xsl:for-each select="db:varlistentry">
           <para><link xlink:href="#{db:term/@xml:id}"><xsl:copy-of select="db:term/db:option"/></link></para>
