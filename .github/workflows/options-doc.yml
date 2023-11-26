@@ -32,7 +32,7 @@ jobs:
         id: pages
         uses: actions/configure-pages@v3
       - name: Build options documentation.
-        run: nix build --verbose --show-trace --print-build-logs .#options-doc
+        run: nix build --show-trace --print-build-logs .#options-doc
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:

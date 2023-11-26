@@ -23,7 +23,7 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@main
       - name: Build goatcounter package
-        run: nix build --verbose --show-trace --print-build-logs .#goatcounter
+        run: nix build --show-trace --print-build-logs .#goatcounter
 
   build-example:
     runs-on: ubuntu-latest
@@ -32,4 +32,4 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@main
       - name: Build example container
-        run: nix --verbose --show-trace --print-build-logs build "$(nix eval --raw .#templates.container.path)#nixosConfigurations.container.config.system.build.toplevel"
+        run: nix --show-trace --print-build-logs build "$(nix eval --raw .#templates.container.path)#nixosConfigurations.container.config.system.build.toplevel"
