@@ -8,7 +8,7 @@
   services.goatcounter = {
     enable = true;
     environmentFile = "/var/lib/goatcounter.env";
-    extraArgs = [ "-listen='*:8002'" "-tls=http" "-debug=all" ];
+    extraArgs = [ "-listen='*:8002'" "-tls=none" "-debug=all" ];
     database = {
       automigrate = true;
       backend = "postgresql";
@@ -33,13 +33,12 @@
 
       locations."/" = {
         proxyPass = "http://127.0.0.1:8002/";
+        recommendedProxySettings = true;
         proxyWebsockets = true; # needed if you need to use WebSocket
-        extraConfig =
-          # required when the target is also TLS server with multiple hosts
-          "proxy_ssl_server_name on;" +
-          # required when the server wants to use HTTP Authentication
-          "proxy_pass_header Authorization;"
-        ;
+        extraConfig = ''
+          proxy_ssl_server_name on;
+          proxy_pass_header Authorization;
+        '';
       };
     };
   };
