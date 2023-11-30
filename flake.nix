@@ -6,7 +6,7 @@
   description = "Nix flake for GoatCounter, a privacy-focused self-hosted web analytics platform.";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-23.05";
+    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
 
     flake-compat = { url = "github:edolstra/flake-compat"; flake = false; };
 
