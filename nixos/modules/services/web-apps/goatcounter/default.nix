@@ -106,6 +106,7 @@ in
       wantedBy = [ "multi-user.target" ];
       serviceConfig = {
         DynamicUser = "yes";
+        StateDirectory = "goatcounter";
         LoadCredential = lib.mkIf (cfg.database.passwordFile != null) "passwordFile:${cfg.database.passwordFile}";
         Environment = [
           "PGDATABASE=${cfg.database.name}"
@@ -116,7 +117,10 @@ in
         ExecStart = lib.concatStringsSep " " [
           "${cfg.package}/bin/goatcounter"
           "serve"
-          "-db '${cfg.database.backend}'"
+          (if (cfg.database.backend == "postgresql") then
+            "-db '${cfg.database.backend}'"
+          else
+            "-db '${cfg.database.backend}+/var/lib/goatcounter/goatcounter.sqlite3'")
           (lib.optionalString cfg.database.automigrate "-automigrate")
           (lib.concatStringsSep " " cfg.extraArgs)
         ];
