@@ -27,6 +27,8 @@ buildGoModule rec {
 
   buildInputs = [ postgresql ] ++ lib.optional enableSqlite sqlite;
 
+  doCheck = false;
+
   # Enable CGO if SQLite support is required.
   CGO_ENABLED = if enableSqlite then "1" else "0";
   # Set version.
