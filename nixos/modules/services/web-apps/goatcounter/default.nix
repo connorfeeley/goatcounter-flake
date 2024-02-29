@@ -112,6 +112,19 @@ in
         '';
       };
     };
+
+    stateDirectory = mkOption {
+      type = with types; nullOr str;
+      default = null;
+      example = lib.literalMD "goatcounter";
+      description = lib.mdDoc ''
+        Writable directory for the service as defined in {manpage}`systemd.exec(5)`.
+
+        When using the SQL backend, GoatCounter needs a writable directory to store the database.
+
+        When set, systemd automatically creates `/var/lib/''${config.services.goatcounter.stateDirectory}` and makes it writable to the service.
+      '';
+    };
   };
 
   config = mkIf cfg.enable {
@@ -120,7 +133,7 @@ in
       wantedBy = [ "multi-user.target" ];
       serviceConfig = {
         DynamicUser = "yes";
-        StateDirectory = "goatcounter";
+        StateDirectory = lib.mkIf (cfg.stateDirectory != null) cfg.stateDirectory;
         LoadCredential = lib.mkIf (cfg.database.passwordFile != null) "passwordFile:${cfg.database.passwordFile}";
         Environment = [
           "PGDATABASE=${cfg.database.name}"
