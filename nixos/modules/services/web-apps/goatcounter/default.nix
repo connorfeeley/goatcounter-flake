@@ -12,11 +12,9 @@ let
 
   cfg = config.services.goatcounter;
 
-  goatcounterEnv = ([
-    "PGDATABASE=${cfg.database.name}"
-    (lib.optionalString (cfg.database.user != null) "PGUSER=${cfg.database.user}")
-    (lib.optionalString (cfg.database.passwordFile != null) "PGPASSFILE=%d/passwordFile")
-  ]);
+  isPostgresql = cfg.database.postgresql != null;
+  isSqlite = cfg.database.sqlite != null;
+  backendName = if isPostgresql then "postgresql" else "sqlite";
 in
 {
   options.services.goatcounter = {
@@ -63,53 +61,60 @@ in
       '';
     };
 
-    # TODO: seperate sqlite and postgres options.
     database = {
-      backend = mkOption {
-        type = types.enum [ "postgresql" "sqlite" ];
-        default = lib.literalMD "postgresql";
-        description = lib.mdDoc "Database backend to use.";
+      sqlite = mkOption {
+        type = types.nullOr (types.submodule {
+          options = {
+            databaseFile = mkOption {
+              type = types.path;
+              default = null;
+              example = lib.literalMD "/var/lib/goatcounter/goatcounter.sqlite3";
+              description = lib.mdDoc ''
+                Path to the SQLite database file.
+
+                When using the SQLite backend, set this to a path under `/var/lib/''${config.services.goatcounter.stateDirectory}`.
+              '';
+            };
+          };
+        });
+        default = null;
+        description = lib.mdDoc "SQLite-specific database options.";
       };
 
-      name = mkOption { type = types.str; description = "Database name to connect to."; };
-      user = mkOption { type = types.str; description = "PostgreSQL user to use for database connection."; };
+      postgresql = mkOption {
+        type = types.nullOr (types.submodule {
+          options = {
+            name = mkOption { type = types.str; description = "Database name to connect to."; };
+            user = mkOption { type = types.str; description = "PostgreSQL user to use for database connection."; };
+            passwordFile = mkOption {
+              type = with types; nullOr path;
+              default = null;
+              example = lib.literalMD "/var/lib/goatcounter.passwd";
+              description = lib.mdDoc ''
+                Path to a file containing the password for the database user.
 
-      sqlite = {
-        databaseFile = mkOption {
-          type = types.path;
-          default = null;
-          example = lib.literalMD "/var/lib/goatcounter/goatcounter.sqlite3";
-          description = lib.mdDoc ''
-            Path to the SQLite database file.
+                The service will use use `LoadCredential` to expose the file to the service using {env}`PGPASSFILE`.
 
-            When using the SQLite backend, set this to a path under `/var/lib/''${config.services.goatcounter.stateDirectory}`.
-          '';
-        };
+                Should contain lines of the following format:
+                ```
+                hostname:port:database:username:password
+                ```
+
+                Must have permissions 0600 or less to be read by the user running goatcounter.
+
+                See [PostgreSQL: Documentation: 16: 34.16. The Password File](https://www.postgresql.org/docs/current/libpq-pgpass.html) for more information.
+              '';
+            };
+          };
+        });
+        default = null;
+        description = lib.mdDoc "PostgreSQL-specific database options.";
       };
 
       automigrate = mkOption {
         type = types.bool;
         default = false;
         description = lib.mdDoc "Whether to automatically migrate the database schema.";
-      };
-      passwordFile = mkOption {
-        type = with types; nullOr path;
-        default = null;
-        example = lib.literalMD "/var/lib/goatcounter.passwd";
-        description = lib.mdDoc ''
-          Path to a file containing the password for the database user.
-
-          The service will use use `LoadCredential` to expose the file to the service using {env}`PGPASSFILE`.
-
-          Should contain lines of the following format:
-          ```
-          hostname:port:database:username:password
-          ```
-
-          Must have permissions 0600 or less to be read by the user running goatcounter.
-
-          See [PostgreSQL: Documentation: 16: 34.16. The Password File](https://www.postgresql.org/docs/current/libpq-pgpass.html) for more information.
-        '';
       };
     };
 
@@ -120,7 +125,7 @@ in
       description = lib.mdDoc ''
         Writable directory for the service as defined in {manpage}`systemd.exec(5)`.
 
-        When using the SQL backend, GoatCounter needs a writable directory to store the database.
+        When using the SQLite backend, GoatCounter needs a writable directory to store the database.
 
         When set, systemd automatically creates `/var/lib/''${config.services.goatcounter.stateDirectory}` and makes it writable to the service.
       '';
@@ -128,30 +133,44 @@ in
   };
 
   config = mkIf cfg.enable {
+    assertions = [
+      {
+        assertion = cfg.database.sqlite == null || cfg.database.postgresql == null;
+        message = "You cannot specify both `database.sqlite` and `database.postgresql`.";
+      }
+      {
+        assertion = cfg.database.sqlite != null || cfg.database.postgresql != null;
+        message = "You must specify either `database.sqlite` or `database.postgresql`.";
+      }
+    ];
+
     systemd.services.goatcounter = {
       description = "GoatCounter web analytics";
       wantedBy = [ "multi-user.target" ];
       serviceConfig = {
+        # Common settings
         DynamicUser = "yes";
         StateDirectory = lib.mkIf (cfg.stateDirectory != null) cfg.stateDirectory;
-        LoadCredential = lib.mkIf (cfg.database.passwordFile != null) "passwordFile:${cfg.database.passwordFile}";
-        Environment = [
-          "PGDATABASE=${cfg.database.name}"
-          (lib.optionalString (cfg.database.user != null) "PGUSER=${cfg.database.user}")
-          (lib.optionalString (cfg.database.passwordFile != null) "PGPASSFILE=%d/passwordFile")
-        ];
-        EnvironmentFile = lib.optionals (cfg.environmentFile != null) [ cfg.environmentFile ];
+        EnvironmentFile = lib.optionals (cfg.environmentFile != null)
+          [ cfg.environmentFile ];
         ExecStart = lib.concatStringsSep " " [
           "${cfg.package}/bin/goatcounter"
           "serve"
-          (if (cfg.database.backend == "postgresql")
-           then "-db '${cfg.database.backend}'"
-           else "-db '${cfg.database.backend}+${cfg.database.sqlite.databaseFile}'")
+          ("-db '${backendName}'" + (lib.optionalString isSqlite "+${cfg.database.sqlite.databaseFile}'"))
           (lib.optionalString cfg.database.automigrate "-automigrate")
           (lib.concatStringsSep " " cfg.extraArgs)
         ];
         Restart = "on-failure";
         RestartSec = "5s";
+
+        # PostgreSQL-specific settings
+        LoadCredential = lib.mkIf (isPostgresql && cfg.database.postgresql.passwordFile != null)
+          "passwordFile:${cfg.database.postgresql.passwordFile}";
+        Environment = lib.optionals isPostgresql [
+          "PGDATABASE=${cfg.database.postgresql.name}"
+          (lib.optionalString (cfg.database.postgresql.user != null) "PGUSER=${cfg.database.postgresql.user}")
+          (lib.optionalString (cfg.database.postgresql.passwordFile != null) "PGPASSFILE=%d/passwordFile")
+        ];
       };
     };
   };

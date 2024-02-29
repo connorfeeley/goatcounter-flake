@@ -8,11 +8,9 @@
   services.goatcounter = {
     enable = true;
     extraArgs = [ "-listen='*:8002'" "-tls=none" "-debug=all" ];
+    stateDirectory = "goatcounter";
     database = {
       automigrate = true;
-
-      backend = "sqlite";
-      stateDirectory = "goatcounter";
       sqlite.databaseFile = "/var/lib/goatcounter/goatcounter.sqlite3";
     };
   };

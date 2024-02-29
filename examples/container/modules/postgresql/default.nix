@@ -11,10 +11,11 @@
     extraArgs = [ "-listen='*:8002'" "-tls=none" "-debug=all" ];
     database = {
       automigrate = true;
-      backend = "postgresql";
-      name = "goatcounter";
-      user = "goatcounter";
-      passwordFile = "/var/lib/goatcounter.passwd";
+      postgresql = {
+        name = "goatcounter";
+        user = "goatcounter";
+        passwordFile = "/var/lib/goatcounter.passwd";
+      };
     };
   };
 
