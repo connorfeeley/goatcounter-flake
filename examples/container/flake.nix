@@ -12,24 +12,27 @@
   };
 
   outputs = inputs@{ self, nixpkgs, goatcounter }: {
-    # Build with `nixos-rebuild --flake .#container` or
-    # `nix build .#nixosConfigurations.container.config.system.build.toplevel`
-    nixosConfigurations.container = nixpkgs.lib.nixosSystem {
-      system = "x86_64-linux";
+    nixosConfigurations = {
+      # Build with `nixos-rebuild --flake .#container-postgresql` or
+      # `nix build .#nixosConfigurations.container-postgresql.config.system.build.toplevel`
+      container-postgresql = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
 
-      # Pass `inputs` to so that this configuration's modules can import
-      # the goatcounter module.
-      specialArgs = { inherit inputs; };
+        # Pass `inputs` to so that this configuration's modules can import
+        # the goatcounter module.
+        specialArgs = { inherit inputs; };
 
-      modules = [
-        # Configure as a container to simplify the configuration
-        # (don't have to configure filesystems, etc)
-        { boot.isContainer = true; system.stateVersion = "23.11"; }
+        modules = [
+          # Configure as a container to simplify the configuration
+          # (don't have to configure filesystems, etc)
+          { boot.isContainer = true; system.stateVersion = "23.11"; }
 
-        # Import this repo's module, which imports the GoatCounter module and
-        # configures NGINX to expose it behind a reverse proxy.
-        ./module.nix
-      ];
+          # Import this repo's module, which imports the GoatCounter module
+          # (configured for PostgreSQL) and configures NGINX to expose it
+          # behind a reverse proxy.
+          ./modules/postgresql
+        ];
+      };
     };
   };
 }
