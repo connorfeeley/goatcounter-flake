@@ -73,6 +73,20 @@ in
 
       name = mkOption { type = types.str; description = "Database name to connect to."; };
       user = mkOption { type = types.str; description = "PostgreSQL user to use for database connection."; };
+
+      sqlite = {
+        databaseFile = mkOption {
+          type = types.path;
+          default = null;
+          example = lib.literalMD "/var/lib/goatcounter/goatcounter.sqlite3";
+          description = lib.mdDoc ''
+            Path to the SQLite database file.
+
+            When using the SQLite backend, set this to a path under `/var/lib/''${config.services.goatcounter.stateDirectory}`.
+          '';
+        };
+      };
+
       automigrate = mkOption {
         type = types.bool;
         default = false;
@@ -117,10 +131,9 @@ in
         ExecStart = lib.concatStringsSep " " [
           "${cfg.package}/bin/goatcounter"
           "serve"
-          (if (cfg.database.backend == "postgresql") then
-            "-db '${cfg.database.backend}'"
-          else
-            "-db '${cfg.database.backend}+/var/lib/goatcounter/goatcounter.sqlite3'")
+          (if (cfg.database.backend == "postgresql")
+           then "-db '${cfg.database.backend}'"
+           else "-db '${cfg.database.backend}+${cfg.database.sqlite.databaseFile}'")
           (lib.optionalString cfg.database.automigrate "-automigrate")
           (lib.concatStringsSep " " cfg.extraArgs)
         ];
