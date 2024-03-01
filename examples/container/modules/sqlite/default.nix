@@ -7,14 +7,11 @@
 
   services.goatcounter = {
     enable = true;
-    environmentFile = "/var/lib/goatcounter.env";
     extraArgs = [ "-listen='*:8002'" "-tls=none" "-debug=all" ];
+    stateDirectory = "goatcounter";
     database = {
       automigrate = true;
-      backend = "postgresql";
-      name = "goatcounter";
-      user = "goatcounter";
-      passwordFile = "/var/lib/goatcounter.passwd";
+      sqlite.databaseFile = "/var/lib/goatcounter/goatcounter.sqlite3";
     };
   };
 
